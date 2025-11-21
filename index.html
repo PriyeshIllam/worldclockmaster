@@ -618,9 +618,13 @@
         }
 
         function addQuickCities(timezoneList) {
+            // Reset previous cities and show only clicked cities
+            activeClocks = [];
+            selectedCities = [];
+
             timezoneList.forEach(tz => {
                 const tzData = timezones.find(t => t.timezone === tz);
-                if (tzData && !activeClocks.find(c => c.timezone === tz)) {
+                if (tzData) {
                     activeClocks.push({ timezone: tz, city: tzData.city });
                 }
             });
