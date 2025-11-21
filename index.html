@@ -199,6 +199,22 @@
             background: rgba(255, 255, 255, 0.25);
         }
 
+        .clock-card.highlighted {
+            background: rgba(255, 215, 0, 0.3);
+            border: 3px solid rgba(255, 215, 0, 0.8);
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.5), 0 12px 40px rgba(0,0,0,0.3);
+            transform: scale(1.02);
+        }
+
+        .clock-card.highlighted::before {
+            background: linear-gradient(90deg, #ffd700, #ffed4e, #ffd700);
+        }
+
+        .clock-card {
+            cursor: pointer;
+            user-select: none;
+        }
+
         .clock-header {
             display: flex;
             justify-content: space-between;
@@ -549,6 +565,7 @@
 
         let activeClocks = [];
         let schedulerZones = [];
+        let selectedCities = [];
 
         // Initialize
         function initializeSelects() {
@@ -613,14 +630,31 @@
 
         function clearAllClocks() {
             activeClocks = [];
+            selectedCities = [];
             renderClocks();
             calculateBestTimes();
         }
 
         function removeClock(timezone) {
             activeClocks = activeClocks.filter(c => c.timezone !== timezone);
+            selectedCities = selectedCities.filter(tz => tz !== timezone);
             renderClocks();
             calculateBestTimes();
+        }
+
+        function toggleCityHighlight(timezone, event) {
+            // Stop propagation to prevent triggering when clicking remove button
+            if (event && event.target.classList.contains('remove-btn')) {
+                return;
+            }
+
+            const index = selectedCities.indexOf(timezone);
+            if (index > -1) {
+                selectedCities.splice(index, 1);
+            } else {
+                selectedCities.push(timezone);
+            }
+            renderClocks();
         }
 
         function getTimeForTimezone(timezone) {
@@ -668,8 +702,10 @@
                 return;
             }
 
-            container.innerHTML = activeClocks.map(clock => `
-                <div class="clock-card">
+            container.innerHTML = activeClocks.map(clock => {
+                const isHighlighted = selectedCities.includes(clock.timezone);
+                return `
+                <div class="clock-card ${isHighlighted ? 'highlighted' : ''}" onclick="toggleCityHighlight('${clock.timezone}', event)">
                     <div class="clock-header">
                         <div class="city-name">${clock.city}</div>
                         <button class="remove-btn" onclick="removeClock('${clock.timezone}')">✕</button>
@@ -682,7 +718,7 @@
                     </div>
                     <div class="timezone-info">${getUTCOffset(clock.timezone)}</div>
                 </div>
-            `).join('');
+            `}).join('');
         }
 
         function updateClocks() {
